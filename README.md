@@ -40,7 +40,29 @@ based on the schema. You can access specific values using the `env`
 function:
 
 ```typescript
-env("PORT") // number
+env("PORT") // number | undefined
+env("ENABLE_FEATURE") // boolean
+```
+
+### Full example
+
+```typescript
+import { load } from "https://deno.land/std@0.207.0/dotenv/mod.ts";
+import { schema, parse } from "https://deno.land/x/zodenv/mod.ts";
+
+await load({
+  export: true,
+});
+
+const [parsedEnv, env] = parse(
+  schema.config({
+    PORT: schema.port().optional(),
+    ENABLE_FEATURE: schema.boolean().default(true),
+    // Add more schema definitions here...
+  })
+);
+
+env("PORT") // number | undefined
 env("ENABLE_FEATURE") // boolean
 ```
 
