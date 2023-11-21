@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "assert";
-import { parse, schema as envSchema } from "@/main.ts";
+import { parse, schema as envSchema } from "./main.ts";
 
 Deno.test({
   name: "basic parsing test",
