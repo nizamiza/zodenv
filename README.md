@@ -44,7 +44,7 @@ env("PORT") // number | undefined
 env("ENABLE_FEATURE") // boolean
 ```
 
-### Full example
+### Full Example
 
 ```typescript
 import { load } from "https://deno.land/std@0.207.0/dotenv/mod.ts";
