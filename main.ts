@@ -1,6 +1,8 @@
 import { ZodRawShape, ZodSchema, z } from "zod";
 
-type EnvValueTransformer<ParsedType> = (value: string) => ParsedType;
+type EnvValueTransformer<ParsedType, Value = string> = (
+  value: Value
+) => ParsedType;
 
 function cleanStringArray(value: string) {
   return value.split(",").map((entry) => entry.replaceAll(`"`, "").trim());
@@ -26,20 +28,24 @@ export const transform = {
   boolean(value: string) {
     return value === "true";
   },
-  integer(value: string) {
-    return z.number().parse(Number.parseInt(value));
+  integer(value: string | number) {
+    return z.string().or(z.number()).parse(Number.parseInt(value.toString()));
   },
-  float(value: string) {
-    return z.number().parse(Number.parseFloat(value));
+  float(value: string | number) {
+    return z.string().or(z.number()).parse(Number.parseFloat(value.toString()));
+  },
+  port(value: string | number) {
+    return z
+      .number()
+      .min(0)
+      .max(65536)
+      .parse(Number.parseInt(value.toString()));
   },
   url(value: string) {
     return z.string().url().parse(value);
   },
   email(value: string) {
     return z.string().email().parse(value);
-  },
-  port(value: string) {
-    return z.number().min(0).max(65536).parse(Number.parseInt(value));
   },
   domain(value: string) {
     return z
@@ -51,6 +57,12 @@ export const transform = {
 
 function useStringTransformer<T>(transformer: EnvValueTransformer<T>) {
   return z.string().transform(transformer);
+}
+
+function useStringOrNumberTransformer<T>(
+  transformer: EnvValueTransformer<T, string | number>
+) {
+  return z.string().or(z.number()).transform(transformer);
 }
 
 export const schema = {
@@ -66,15 +78,6 @@ export const schema = {
    * Serves mainly as an alias for `z.string()` call.
    */
   string: z.string,
-  /**
-   * Schema for parsing basic number values. For discriminating floats and
-   * integers use `envSchema.float` and `envSchema.integer`. E.g.:
-   * ```env
-   * NUMBER_VALUE="42"
-   * ```
-   * Serves mainly as an alias for `z.number()` call.
-   */
-  number: z.number,
   /**
    * Schema for parsing boolean values. E.g.:
    * ```env
@@ -129,7 +132,7 @@ export const schema = {
    * ```
    */
   integer() {
-    return useStringTransformer(transform.integer);
+    return useStringOrNumberTransformer(transform.integer);
   },
   /**
    * Schema for parsing float values. E.g.:
@@ -138,7 +141,17 @@ export const schema = {
    * ```
    */
   float() {
-    return useStringTransformer(transform.float);
+    return useStringOrNumberTransformer(transform.float);
+  },
+  /**
+   * Schema for parsing port values. Validates wether value is in valid port
+   * range, i.e. between 0 and 65536. E.g.:
+   * ```env
+   * PORT_VALUE="8080"
+   * ```
+   */
+  port() {
+    return useStringOrNumberTransformer(transform.port);
   },
   /**
    * Schema for parsing URL values. E.g.:
@@ -157,16 +170,6 @@ export const schema = {
    */
   email() {
     return useStringTransformer(transform.email);
-  },
-  /**
-   * Schema for parsing port values. Validates wether value is in valid port
-   * range, i.e. between 0 and 65536. E.g.:
-   * ```env
-   * PORT_VALUE="8080"
-   * ```
-   */
-  port() {
-    return useStringTransformer(transform.port);
   },
   /**
    * Schema for parsing domain values. E.g.:

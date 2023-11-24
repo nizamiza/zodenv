@@ -8,7 +8,7 @@ Deno.test({
       ARRAY_OF_VALUES: envSchema.stringArray(),
       USER: envSchema.json({
         NAME: envSchema.string(),
-        AGE: envSchema.number(),
+        AGE: envSchema.integer(),
         EMAIL: envSchema.email(),
       }),
     });
@@ -99,7 +99,7 @@ Deno.test({
     const schema = envSchema.config({
       EMAILS: envSchema.emailArray(),
       PORT: envSchema.port(),
-      MAX_CONNECTIONS: envSchema.number().positive(),
+      MAX_CONNECTIONS: envSchema.integer(),
       ENABLE_FEATURE: envSchema.boolean(),
     });
 
@@ -170,7 +170,7 @@ Deno.test({
       ARRAY_OF_EMAILS: envSchema.emailArray(),
       USER: envSchema.json({
         NAME: envSchema.string(),
-        AGE: envSchema.number(),
+        AGE: envSchema.integer(),
         EMAIL: envSchema.email(),
       }),
     });
