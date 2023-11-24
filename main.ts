@@ -1,4 +1,4 @@
-import { ZodLiteral, ZodRawShape, ZodSchema, z } from "zod";
+import { ZodLiteral, ZodRawShape, z } from "zod";
 
 type EnvValueTransformer<ParsedType, Value = string> = (
   value: Value
@@ -65,36 +65,18 @@ function useStringOrNumberTransformer(
   return z.string().or(z.number()).transform(transformer);
 }
 
-export const schema = {
-  /**
-   * Alias for `z.object()` call.
-   */
-  config: z.object,
-  /**
-   * Schema for parsing basic string values. E.g.:
-   * ```env
-   * STRING_VALUE="value_1"
-   * ```
-   * Serves mainly as an alias for `z.string()` call.
-   */
-  string: z.string,
+/**
+ * e - stands for *"zod extended"*. Zod powered schemas designed towards parsing
+ * common ENV variable formats.
+ */
+export const e = {
+  ...z,
   /**
    * Schema for parsing union string literal values. E.g. `.env`:
    * ```env
    * NODE_ENV="production"
    * # NODE_ENV="testing"
    * # NODE_ENV="development"
-   * ```
-   * ### E.g. usage:
-   * ```typescript
-   * import { schema, parse } from "https://deno.land/x/zodenv/mod.ts";
-   *
-   * const [parsed, env] = parse(schema.config({
-   *   NODE_ENV: schema.oneOf(["production", "development", "testing"]),
-   * }));
-   *
-   * env("NODE_ENV") // "production" | "testing" | "development"
-   * ```
    */
   oneOf<const T extends string>(literals: readonly T[]) {
     return z.union(
@@ -209,21 +191,29 @@ export const schema = {
   },
 };
 
-export type Env<Schema extends ZodSchema> =
+export type InferFromShape<T extends ZodRawShape> = z.infer<
+  ReturnType<typeof z.object<T>>
+>;
+
+export type Env<Shape extends ZodRawShape> =
   | Record<string, string>
   | Partial<{
-      [Key in keyof z.infer<Schema>]: z.infer<Schema>[Key] extends string
-        ? z.infer<Schema>[Key]
+      [Key in keyof InferFromShape<Shape>]: InferFromShape<Shape>[Key] extends string
+        ? InferFromShape<Shape>[Key]
         : string;
     }>;
 
-export function parse<T extends ZodSchema>(
-  schema: T,
+export type EnvShaper<T extends ZodRawShape> = (envSchema: typeof e) => T;
+
+export function parse<T extends ZodRawShape>(
+  envShape: EnvShaper<T>,
   env: Env<T> = Deno.env.toObject()
 ): [
-  parsedEnv: z.infer<T>,
-  envGetter: <Key extends keyof z.infer<T>>(key: Key) => z.infer<T>[Key]
+  parsedEnv: InferFromShape<T>,
+  envGetter: <Key extends keyof InferFromShape<T>>(
+    key: Key
+  ) => InferFromShape<T>[Key]
 ] {
-  const parsedEnv = schema.parse(env);
+  const parsedEnv = z.object(envShape(e)).parse(env);
   return [parsedEnv, (key) => parsedEnv[key]];
 }
