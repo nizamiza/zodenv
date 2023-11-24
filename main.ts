@@ -1,4 +1,4 @@
-import { ZodLiteral, ZodRawShape, ZodSchema, ZodUnion, z } from "zod";
+import { ZodLiteral, ZodRawShape, ZodSchema, z } from "zod";
 
 type EnvValueTransformer<ParsedType, Value = string> = (
   value: Value

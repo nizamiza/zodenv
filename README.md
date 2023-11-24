@@ -40,14 +40,14 @@ based on the schema. You can access specific values using the `env`
 function:
 
 ```typescript
-env("PORT") // number | undefined
-env("ENABLE_FEATURE") // boolean
+env("PORT"); // number | undefined
+env("ENABLE_FEATURE"); // boolean
 ```
 
 ### Full Example
 
 ```typescript
-import { load } from "https://deno.land/std@0.207.0/dotenv/mod.ts";
+import { load } from "https://deno.land/std@0.208.0/dotenv/mod.ts";
 import { schema, parse } from "https://deno.land/x/zodenv/mod.ts";
 
 await load({
@@ -62,15 +62,17 @@ const [parsedEnv, env] = parse(
   })
 );
 
-env("PORT") // number | undefined
-env("ENABLE_FEATURE") // boolean
+env("PORT"); // number | undefined
+env("ENABLE_FEATURE"); // boolean
 ```
 
 ### Schema Definitions
 
 The `schema` object provides various methods to define schema rules for different types of environment variables:
 
+- `config()`: Alias for z.object() call.
 - `string()`: Schema for parsing basic string values.
+- `oneOf()`: Schema for parsing union string literal values.
 - `number()`: Schema for parsing basic number values.
 - `boolean()`: Schema for parsing boolean values.
 - `emailArray()`: Schema for parsing email arrays.
