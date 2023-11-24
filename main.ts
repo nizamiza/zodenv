@@ -1,4 +1,4 @@
-import { ZodRawShape, ZodSchema, z } from "zod";
+import { ZodLiteral, ZodRawShape, ZodSchema, ZodUnion, z } from "zod";
 
 type EnvValueTransformer<ParsedType, Value = string> = (
   value: Value
@@ -78,6 +78,33 @@ export const schema = {
    * Serves mainly as an alias for `z.string()` call.
    */
   string: z.string,
+  /**
+   * Schema for parsing union string literal values. E.g. `.env`:
+   * ```env
+   * NODE_ENV="production"
+   * # NODE_ENV="testing"
+   * # NODE_ENV="development"
+   * ```
+   * ### E.g. usage:
+   * ```typescript
+   * import { schema, parse } from "https://deno.land/x/zodenv/mod.ts";
+   *
+   * const [parsed, env] = parse(schema.config({
+   *   NODE_ENV: schema.oneOf(["production", "development", "testing"]),
+   * }));
+   *
+   * env("NODE_ENV") // "production" | "testing" | "development"
+   * ```
+   */
+  oneOf<const T extends string>(literals: readonly T[]) {
+    return z.union(
+      literals.map((literal) => z.literal(literal)) as [
+        ZodLiteral<T>,
+        ZodLiteral<T>,
+        ...ZodLiteral<T>[]
+      ]
+    );
+  },
   /**
    * Schema for parsing boolean values. E.g.:
    * ```env
@@ -182,9 +209,17 @@ export const schema = {
   },
 };
 
+export type Env<Schema extends ZodSchema> =
+  | Record<string, string>
+  | Partial<{
+      [Key in keyof z.infer<Schema>]: z.infer<Schema>[Key] extends string
+        ? z.infer<Schema>[Key]
+        : string;
+    }>;
+
 export function parse<T extends ZodSchema>(
   schema: T,
-  env: Record<string, string> = Deno.env.toObject()
+  env: Env<T> = Deno.env.toObject()
 ): [
   parsedEnv: z.infer<T>,
   envGetter: <Key extends keyof z.infer<T>>(key: Key) => z.infer<T>[Key]
