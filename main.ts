@@ -29,10 +29,10 @@ export const transform = {
     return value === "true";
   },
   integer(value: string | number) {
-    return z.string().or(z.number()).parse(Number.parseInt(value.toString()));
+    return z.number().parse(Number.parseInt(value.toString()));
   },
   float(value: string | number) {
-    return z.string().or(z.number()).parse(Number.parseFloat(value.toString()));
+    return z.number().parse(Number.parseFloat(value.toString()));
   },
   port(value: string | number) {
     return z
@@ -59,8 +59,8 @@ function useStringTransformer<T>(transformer: EnvValueTransformer<T>) {
   return z.string().transform(transformer);
 }
 
-function useStringOrNumberTransformer<T>(
-  transformer: EnvValueTransformer<T, string | number>
+function useStringOrNumberTransformer(
+  transformer: EnvValueTransformer<number, string | number>
 ) {
   return z.string().or(z.number()).transform(transformer);
 }
