@@ -1,4 +1,8 @@
-import { ZodLiteral, ZodRawShape, z } from "zod";
+import {
+  ZodLiteral,
+  ZodRawShape,
+  z,
+} from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 type EnvValueTransformer<ParsedType, Value = string> = (
   value: Value
